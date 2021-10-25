@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 internal class PlayerMovement : PlayerComponents
 {
@@ -20,10 +21,30 @@ internal class PlayerMovement : PlayerComponents
 
     private bool canMove;
 
+    private Control control;
+    //private InputAction movement;
+
     public bool CanMove
     {
         get { return canMove; }
         set { canMove = value; }
+    }
+
+    private void Awake()
+    {
+        control = new Control();
+        control.Player.Movement.performed += context => direction = context.ReadValue<float>();
+        control.Player.Movement.canceled += context => direction = 0;
+    }
+
+    private void OnEnable()
+    {
+        control.Player.Enable();
+    }
+
+    private void OnDisable()
+    {
+        control.Player.Disable();
     }
 
     // Start is called before the first frame update
@@ -38,11 +59,19 @@ internal class PlayerMovement : PlayerComponents
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetAxisRaw("Horizontal") != 0 && CanMove == true)
+        Debug.Log(direction);
+        if (direction != 0)
         {
-            direction = FindDirection();
             moving = true;
+            //direction = control.Player.Movement.ReadValue<float>();
+            Debug.Log("control " + control.Player.Movement.ReadValue<float>());
+
         }
+        //if (Input.GetAxisRaw("Horizontal") != 0 && CanMove == true)
+        //{
+        //    direction = FindDirection();
+        //    moving = true;
+        //}
         else
         {
             moving = false;
@@ -54,19 +83,9 @@ internal class PlayerMovement : PlayerComponents
     {
         if (moving == true)
         {
+            rigidBody.velocity = new Vector2(direction * speed, rigidBody.velocity.y);
+            this.transform.localScale = new Vector2(direction * 0.65f, 0.65f);
             //rigidBody.MovePosition(rigidBody.position + new Vector2(direction * speed, 0) * Time.deltaTime);
-            if (direction < 0)
-            {
-                rigidBody.velocity = new Vector2(direction * speed, rigidBody.velocity.y);
-                this.transform.localScale = new Vector2(-0.65f, 0.65f);
-            }
-
-            if (direction > 0)
-            {
-                rigidBody.velocity = new Vector2(direction * speed, rigidBody.velocity.y);
-                this.transform.localScale = new Vector2(0.65f, 0.65f);
-            }
-
         }  
     }
   
